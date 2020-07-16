@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 using System.Reflection;
@@ -10,6 +11,7 @@ using HarmonyLib;
 using HS2;
 using Config;
 using Manager;
+using Illusion.Component.UI;
 
 namespace HS2_ExtraGroups
 {
@@ -17,7 +19,7 @@ namespace HS2_ExtraGroups
     {
         public static void PatchSpecial(Harmony harmony)
         {
-            {
+            { // why is ADVMainScene internal?...
                 var iteratorType = AccessTools.TypeByName("ADV.ADVMainScene");
                 var iteratorMethod = AccessTools.Method(iteratorType, "CharacterDelete");
                 var transpiler = new HarmonyMethod(typeof(Hooks), nameof(ADVMainScene_CharacterDelete_IncreaseRoomsList));
@@ -61,9 +63,15 @@ namespace HS2_ExtraGroups
         }
         
         [HarmonyPrefix, HarmonyPatch(typeof(GroupListUI), "Start")]
-        public static void GroupListUI_Start_CreateUI(GroupListUI __instance, GroupCharaSelectUI ___groupCharaSelectUI)
+        public static void GroupListUI_Start_CreateUI(GroupListUI __instance, ref Array ___groupUIInfos, SpriteChangeCtrl ___sccBasePanel)
         {
-            Tools.ExpandUI(__instance, ___groupCharaSelectUI);
+            Tools.ExpandUI(__instance, ref ___groupUIInfos, ___sccBasePanel, 0);
+        }
+        
+        [HarmonyPrefix, HarmonyPatch(typeof(CoordinateGroupListUI), "Start")]
+        public static void CoordinateGroupListUI_Start_CreateUI(CoordinateGroupListUI __instance, ref Array ___groupUIInfos, SpriteChangeCtrl ___sccBasePanel)
+        {
+            Tools.ExpandUI(__instance, ref ___groupUIInfos, ___sccBasePanel, 1);
         }
         
         [HarmonyPrefix, HarmonyPatch(typeof(HomeSceneManager), "Start")]
@@ -73,7 +81,7 @@ namespace HS2_ExtraGroups
 
             for (var i = 0; i < HS2_ExtraGroups.groupCount; i++)
             {
-                ___txHomeSelectGroupString[i] = new[]
+                ___txHomeSelectGroupString[i] = new[] // yes there is a spelling mistake, illusion did it - not me
                 {
                     "グループ" + (i + 1) + "が設定中",
                     i + 1 + " Selet a Group",
@@ -84,6 +92,19 @@ namespace HS2_ExtraGroups
             }
         }
 
+        [HarmonyPrefix, HarmonyPatch(typeof(Game), "Awake")]
+        public static void Game_Awake_CustomEventsLists(Game __instance)
+        {
+            __instance.tableLobbyEvents = new Dictionary<string, Game.EventCharaInfo>[HS2_ExtraGroups.groupCount];
+            __instance.tableHomeEvents = new Dictionary<string, Game.EventCharaInfo>[HS2_ExtraGroups.groupCount];
+        }
+        
+        [HarmonyPrefix, HarmonyPatch(typeof(HomeSceneManager), "Start")]
+        public static void HomeSceneManager_Start_CustomRoomClothsLists(HomeSceneManager __instance)
+        {
+            __instance.roomList = new List<string>[HS2_ExtraGroups.groupCount];
+        }
+        
         [HarmonyPrefix, HarmonyPatch(typeof(SaveData), "Initialize")]
         public static void SaveData_Initialize_CustomRoomClothsLists(SaveData __instance)
         {
@@ -96,8 +117,8 @@ namespace HS2_ExtraGroups
         {
             __instance.roomList = new List<string>[HS2_ExtraGroups.groupCount];
             __instance.dicCloths = new Dictionary<string, ClothPngInfo>[HS2_ExtraGroups.groupCount];
-
-            var oldList = source.roomList;
+            
+            var oldList = source.roomList; // adjust saves or have fun playing with no girls
             source.roomList = new List<string>[HS2_ExtraGroups.groupCount];
             for (var i = 0; i < source.roomList.Length; i++)
             {

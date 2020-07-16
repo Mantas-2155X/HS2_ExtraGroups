@@ -1,22 +1,31 @@
+using System;
 using System.Collections.Generic;
+
+using HarmonyLib;
 
 using UnityEngine;
 using UnityEngine.UI;
 
-using HS2;
-using Illusion.Game;
+using Illusion.Component.UI;
 
-using UniRx;
-using UniRx.Triggers;
+using Object = UnityEngine.Object;
 
 namespace HS2_ExtraGroups
 {
     public static class Tools
     {
-        public static void ExpandUI(GroupListUI __instance, GroupCharaSelectUI groupCharaSelectUI)
+        private static readonly string[] targets =
         {
-            var core = GameObject.Find("HomeScene/Canvas/Panel/CharaEdit/Group/SelectGroups/Panel/Filter And Sort");
-            
+            "CharaEdit/Group/SelectGroups/Panel/Filter And Sort",
+            "CharaEdit/Coordinate/SelectGroup/Panel/Filter And Sort"
+        };
+
+        public static void ExpandUI(object __instance, ref Array ___groupUIInfos, SpriteChangeCtrl ___sccBasePanel, int k)
+        {
+            var panel = GameObject.Find("HomeScene/Canvas/Panel");
+
+            var core = panel.transform.Find(targets[k]);
+        
             var ScrollView = new GameObject("ScrollView", typeof(RectTransform));
             ScrollView.transform.SetParent(core.transform, false);
             
@@ -27,8 +36,8 @@ namespace HS2_ExtraGroups
             
             var vpRectTransform = ViewPort.GetComponent<RectTransform>();
             
-            var filter = GameObject.Find("HomeScene/Canvas/Panel/CharaEdit/Group/SelectGroups/Panel/Filter And Sort/Filter");
-            filter.transform.SetParent(ViewPort.transform, false);
+            var filter = core.transform.Find("Filter");
+            filter.SetParent(ViewPort.transform, false);
             
             var svScrollRect = ScrollView.AddComponent<ScrollRect>();
             svScrollRect.content = filter.GetComponent<RectTransform>();
@@ -37,7 +46,7 @@ namespace HS2_ExtraGroups
             svScrollRect.vertical = false;
             svScrollRect.scrollSensitivity = 40;
             
-            var fitter = filter.AddComponent<ContentSizeFitter>();
+            var fitter = filter.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
             
@@ -48,49 +57,82 @@ namespace HS2_ExtraGroups
             sRectTransform.offsetMin = new Vector2(-135, -71);
             sRectTransform.offsetMax = new Vector2(5.5f, 29);
 
-            var hm = Singleton<Manager.HomeSceneManager>.Instance;
-            var save = Singleton<Manager.Game>.Instance.saveData;
-           
-            var orig = GameObject.Find("HomeScene/Canvas/Panel/CharaEdit/Group/SelectGroups/Panel/Filter And Sort/ScrollView/ViewPort/Filter/tglFilter5");
+            var trav = Traverse.Create(__instance);
+
+            var type = ___groupUIInfos.GetType().GetElementType(); // why did you make this private?...
+            if (type != null)
+            {
+                var newInfos = Array.CreateInstance(type, HS2_ExtraGroups.groupCount);
+                Array.Copy(___groupUIInfos, newInfos, Math.Min(___groupUIInfos.Length, newInfos.Length));
+                
+                ___groupUIInfos = newInfos;
+            }
+
+            var ctrl1 = panel.transform.Find("Home/imgSelectGroup").GetComponent<SpriteChangeCtrl>();
+            var oldSprites1 = ctrl1.sprites;
+            ctrl1.sprites = new Sprite[HS2_ExtraGroups.groupCount];
+            for (var i = 0; i < oldSprites1.Length; i++)
+                ctrl1.sprites[i] = oldSprites1[i];
+            
+            var ctrl2 = panel.transform.Find("Home/imgSelectGroup/imgState").GetComponent<SpriteChangeCtrl>();
+            var oldSprites2 = ctrl2.sprites;
+            ctrl2.sprites = new Sprite[HS2_ExtraGroups.groupCount];
+            for (var i = 0; i < oldSprites2.Length; i++)
+                ctrl2.sprites[i] = oldSprites2[i];
+            
+            var oldSprites = ___sccBasePanel.sprites;
+            ___sccBasePanel.sprites = new Sprite[HS2_ExtraGroups.groupCount];
+            for (var i = 0; i < oldSprites.Length; i++)
+                ___sccBasePanel.sprites[i] = oldSprites[i];
+
+            var selectGroup = panel.transform.Find(k == 0 ? "CharaEdit/Group/SelectGroups" : "CharaEdit/Coordinate/SelectGroup");
+            var gFilter5 = selectGroup.transform.Find("Panel/Filter And Sort/ScrollView/ViewPort/Filter/tglFilter5");
+            
+            if (k == 0)
+            {
+                var oldFilters = trav.Field("groupCharaSelectUI").Field("tglFilters").GetValue<Toggle[]>();
+                var newFilters = new Toggle[HS2_ExtraGroups.groupCount + 1];
+            
+                for (var i = 0; i < oldFilters.Length; i++)
+                    newFilters[i] = oldFilters[i];
+                
+                var selectChara = panel.transform.Find("CharaEdit/Group/SelectChara");
+                var sFilter5 = selectChara.transform.Find("Panel/Filter And Sort/Filter/tglFilter5");
+                
+                for (var i = 5; i < HS2_ExtraGroups.groupCount; i++)
+                {
+                    var cCopy = Object.Instantiate(sFilter5, sFilter5.parent);
+                    cCopy.name = "tglFilter" + (i + 1);
+                
+                    newFilters[i + 1] = cCopy.GetComponentInChildren<Toggle>();
+                }
+                
+                trav.Field("groupCharaSelectUI").Field("tglFilters").SetValue(newFilters);
+            }
             
             for (var i = 5; i < HS2_ExtraGroups.groupCount; i++)
             {
-                var copy = Object.Instantiate(orig, orig.transform.parent);
-                copy.name = "tglFilter" + (i + 1);
+                ___sccBasePanel.sprites[i] = Object.Instantiate(___sccBasePanel.sprites[4]);
+                ctrl1.sprites[i] = Object.Instantiate(ctrl1.sprites[4]);
+                ctrl2.sprites[i] = Object.Instantiate(ctrl2.sprites[4]);
+
+                if (type == null)
+                    continue;
+
+                var gCopy = Object.Instantiate(gFilter5, gFilter5.parent);
+                gCopy.name = "tglFilter" + (i + 1);
                 
-                var image = copy.GetComponentInChildren<Image>();
-                var toggle = copy.GetComponentInChildren<Toggle>();
+                var obj = Activator.CreateInstance(type, true);
 
-                var index = i;
+                var tglFieldInfo = type.GetField("tgl");
+                tglFieldInfo.SetValue(obj, gCopy.GetComponentInChildren<Toggle>());
                 
-                toggle.onValueChanged = new Toggle.ToggleEvent();
-                toggle.onValueChanged.AddListener(delegate(bool on)
-                {
-                    image.enabled = !on;
-                    
-                    if (save.selectGroup == index)
-                        return;
+                var imageFieldInfo = type.GetField("image");
+                imageFieldInfo.SetValue(obj, gCopy.GetComponentInChildren<Image>());
 
-                    if (!on)
-                        return;
-                    
-                    Utils.Sound.Play(SystemSE.ok_s);
-                    
-                    save.selectGroup = index;
-                    hm.SetSelectGroupText(save.selectGroup);
-                    
-                    groupCharaSelectUI.ListCtrl.SelectInfoClear();
-                    groupCharaSelectUI.ListCtrl.RefreshShown();
-                    __instance.ListCtrl.SelectInfoClear();
-                    __instance.Create();
-                });
-
-                toggle.OnPointerEnterAsObservable().Subscribe(delegate
-                {
-                    Utils.Sound.Play(SystemSE.sel);
-                });
+                ___groupUIInfos.SetValue(obj, i);
             }
-
+            
             filter.GetComponent<HorizontalLayoutGroup>().enabled = true;
         }
         
@@ -98,7 +140,7 @@ namespace HS2_ExtraGroups
         {
             var list = new List<int>();
 
-            for (var i = 0; i < HS2_ExtraGroups.groupCount; i++)
+            for (var i = 0; i < HS2_ExtraGroups.groupCount + 1; i++)
                 list.Add(i);
 
             return list;
