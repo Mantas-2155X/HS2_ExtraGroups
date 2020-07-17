@@ -137,6 +137,9 @@ namespace HS2_ExtraGroups
                 else
                     source.dicCloths[i] = new Dictionary<string, ClothPngInfo>();
             }
+
+            if (source.selectGroup >= __instance.roomList.Length)
+                source.selectGroup = 4;
         }
         
         private static IEnumerable<CodeInstruction> ADVMainScene_CharacterDelete_IncreaseRoomsList(IEnumerable<CodeInstruction> instructions)
