@@ -186,7 +186,25 @@ namespace HS2_ExtraGroups
 
             return il;
         }
+        
+        [HarmonyTranspiler, HarmonyPatch(typeof(GroupCharaSelectUI), "IsEntryLimit")]
+        private static IEnumerable<CodeInstruction> GroupCharaSelectUI_IsEntryLimit_IncreaseCharaLimit(IEnumerable<CodeInstruction> instructions)
+        {
+            var il = instructions.ToList();
+           
+            var index = il.FindIndex(instruction => instruction.opcode == OpCodes.Ldc_I4_S && (sbyte)instruction.operand == 20);
+            if (index <= 0)
+            {
+                HS2_ExtraGroups.Logger.LogMessage("Failed transpiling 'GroupCharaSelectUI_IsEntryLimit_IncreaseCharaLimit' '20' index not found!");
+                HS2_ExtraGroups.Logger.LogWarning("Failed transpiling 'GroupCharaSelectUI_IsEntryLimit_IncreaseCharaLimit' '20' index not found!");
+                return il;
+            }
+            
+            il[index].operand = HS2_ExtraGroups.girlCount;
 
+            return il;
+        }
+        
         [HarmonyTranspiler, HarmonyPatch(typeof(GroupListUI), "Create")]
         private static IEnumerable<CodeInstruction> GroupListUI_Create_CustomList(IEnumerable<CodeInstruction> instructions) => CustomList(instructions, "GroupListUI_Create_CustomList");
         
