@@ -9,6 +9,7 @@ Needs https://github.com/IllusionMods/BepisPlugins for configuration to work!
 
 **Current Features:**  
 * Allow for more than 5 groups for both Character and Coordinate UIs
+* Unlock the limit of 20 girls per each group
 * Addition of scroll function to the UIs
 
 **Download:**  
@@ -18,4 +19,4 @@ Needs https://github.com/IllusionMods/BepisPlugins for configuration to work!
 * Unzip `HS2_ExtraGroups.zip` into your game directory. If done correctly, in `BepInEx/plugins/2155X/` you should see `HS2_ExtraGroups.dll`  
 
 **Configuration:**  
-* Open the plugin settings and change group count. You will need to restart the game for the change to apply.  
+* Open the plugin settings and change group, girl count. You will need to restart the game for the change to apply.  
