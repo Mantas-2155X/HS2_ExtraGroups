@@ -1,5 +1,5 @@
 # HS2_ExtraGroups  
-This plugin allows you to have more than the default amount of groups in main game.
+This plugin allows you to have more than the default amount of groups and girls per group in main game.
 
 # DO NOT REUPLOAD WITHOUT PERMISSION | 未经许可请勿转载  
 
@@ -9,7 +9,7 @@ Needs https://github.com/IllusionMods/BepisPlugins for configuration to work!
 
 **Current Features:**  
 * Allow for more than 5 groups for both Character and Coordinate UIs
-* Unlock the limit of 20 girls per each group
+* Allow for more than the limit of 20 girls per each group
 * Addition of scroll function to the UIs
 
 **Download:**  
