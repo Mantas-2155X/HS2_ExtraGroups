@@ -48,7 +48,7 @@ namespace HS2_ExtraGroups
             }
             
             {
-                var iteratorType = typeof(MaleCharaSelectUI).GetNestedType("<Start>d__18", AccessTools.all);
+                var iteratorType = typeof(MaleCharaSelectUI).GetNestedType("<Start>d__20", AccessTools.all);
                 var iteratorMethod = AccessTools.Method(iteratorType, "MoveNext");
                 var transpiler = new HarmonyMethod(typeof(Hooks), nameof(MaleCharaSelectUI_Start_CustomList));
                 harmony.Patch(iteratorMethod, null, null, transpiler);
