@@ -10,7 +10,7 @@ namespace HS2_ExtraGroups
     [BepInPlugin(nameof(HS2_ExtraGroups), nameof(HS2_ExtraGroups), VERSION)]
     public class HS2_ExtraGroups : BaseUnityPlugin
     {
-        public const string VERSION = "1.0.0";
+        public const string VERSION = "1.0.1";
 
         public new static ManualLogSource Logger;
         
